@@ -52,9 +52,11 @@ press = 0
 try:
 	while 1:
 		if state == 0:
-			if GPIO.input(KEY_PRESS_PIN): # button is release
+			if (GPIO.input(KEY_PRESS_PIN) == 0) or (GPIO.input(KEY1_PIN) == 0) or (GPIO.input(KEY2_PIN) == 0) or (GPIO.input(KEY3_PIN) == 0):
+				# button is pressed
+				press = 1
+			else: # button is released:
 				if press == 1:
-					#print("state 0 -> 1")
 					press = 0
 					state = 1
 					serial = spi(device=0, port=0, bus_speed_hz = 8000000, transfer_size = 4096, gpio_DC = DC_PIN, gpio_RST = RST_PIN)
@@ -62,8 +64,6 @@ try:
 					image = Image.new('1', (width, height))
 					draw = ImageDraw.Draw(image)
 					draw.rectangle((0,0,width,height), outline=0, fill=0)
-			else: # button is pressed:
-				press = 1
 
 		if state == 1:
 			with canvas(device) as draw:
@@ -75,20 +75,24 @@ try:
 				MemUsage = subprocess.check_output(cmd, shell = True )
 				cmd = "df -h | awk '$NF==\"/\"{printf \"Disk: %d/%dGB %s\", $3,$2,$5}'"
 				Disk = subprocess.check_output(cmd, shell = True )
+				cmd = "/opt/vc/bin/vcgencmd measure_temp"
+				Temp = subprocess.check_output(cmd, shell = True )
 
 				draw.text((xpos, top),       "IP: " + str(IP),  font=font, fill=255)
 				draw.text((xpos, top+8),     str(CPU), font=font, fill=255)
 				draw.text((xpos, top+16),    str(MemUsage),  font=font, fill=255)
-				draw.text((xpos, top+25),    str(Disk),  font=font, fill=255)
+				draw.text((xpos, top+24),    str(Disk),  font=font, fill=255)
+				draw.text((xpos, top+33),    str(Temp), font=font, fill=255)
 
-				if GPIO.input(KEY_PRESS_PIN): # button is released
+				if (GPIO.input(KEY_PRESS_PIN) == 0) or (GPIO.input(KEY1_PIN) == 0) or (GPIO.input(KEY2_PIN) == 0) or (GPIO.input(KEY3_PIN) == 0):
+					# button is pressed
+					press = 1
+				else: # button is released
 					if press == 1:
-						#print("state 1 -> 0")
 						GPIO.output(RST_PIN,GPIO.LOW)
 						press = 0
 						state = 0
-				else: # button is pressed:
-					press = 1
+
 except:
 	print("except")
 GPIO.cleanup()
