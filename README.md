@@ -11,8 +11,6 @@ The display attaches to a Pi via the GPIO.  It is a 128x64 1.3" blue OLED displa
 joystick on one side, and 3 buttons on the other:
 * Driver: SH1106
 * Interface: 4-wire SPI, 3-wire SPI, I2C
-* Display color: blue
-* Resolution: 128 x 64
 * Operating voltage: 3.3V
 
 The display has some jumpers at the back to be soldered to enable/disable the interfaces it uses.
