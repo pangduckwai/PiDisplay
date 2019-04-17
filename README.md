@@ -74,4 +74,4 @@ That's it, the display is ready to use.
 * `sudo python demo.py`
 
 ## Next step
-The Python code in this repo are adopted by me from `demo.py` provided by the manufacturer.
+The Python code in this repo is adopted from `demo.py` provided by the manufacturer.
