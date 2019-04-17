@@ -16,14 +16,14 @@ joystick on one side, and 3 buttons on the other:
 * Operating voltage: 3.3V
 
 The display has some jumpers at the back to be soldered to enable/disable the interfaces it uses.
-I decided to use the default 4-wire SPI which require no soldering at all :stuck_out_tongue_closed_eyes:
+It is a no-brainer to use the default 4-wire SPI which require no soldering at all.
 
 ## Setup
 I decided to use Python to control my display. There are other options from the manufacturer but I
-didn't explore them.
+haven't explore them.
 
-_**Note: The following steps are deduced from the documents from the manufacturer. I performed them
-in the exact order listed below, but I'm not sure if is absolutely necessary**_
+_**Note: The following steps are deduced from the documents provided by the manufacturer. I performed them
+in the exact order listed below, but I'm not sure if that is absolutely necessary...**_
 
 ### Prepare raspbian
 * `sudo apt-get update`
@@ -53,7 +53,7 @@ in the exact order listed below, but I'm not sure if is absolutely necessary**_
 * Choose 'Yes'
 
 ### Enable the I2C interface
-I'm not sure if this is necessary, but well what the hack...
+Not sure if this is necessary, but well what the hack...
 * `sudo raspi-config`
 * Go to '5 Interfacing Options'
 * Go to 'P5 I2C'
@@ -70,9 +70,9 @@ Well I'm not too sure about what is the point to install python-pip then remove 
 That's it, the display is ready to use.
 
 ### Sample python app
-* Download the sample apps from [https://www.waveshare.com/wiki/File:1.3inch-OLED-HAT-Code.7z](https://www.waveshare.com/wiki/File:1.3inch-OLED-HAT-Code.7z) to somewhere
-* Extract the content somehow, I'm too lazy to find out how to handle 7z on Linux...
-* `cd` to the subfolder containing the Python samples
+* Download the sample apps from [https://www.waveshare.com/wiki/File:1.3inch-OLED-HAT-Code.7z](https://www.waveshare.com/wiki/File:1.3inch-OLED-HAT-Code.7z) to somewhere.
+* Extract the content somehow, I'm too lazy to find out how to handle 7z on Linux... :stuck_out_tongue_closed_eyes:
+* `cd` to the subfolder containing the Python samples.
 * `sudo python demo.py`
 
 ## Next step
