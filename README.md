@@ -1,13 +1,13 @@
 # PiDisplay
 Setup and use the Pi OLED HAT by Waveshare
 
-The **1.3" OLED Display HAT for [Raspberry Pi](https://www.raspberrypi.org/)** is a display HAT as the
+The **1.3" OLED Display HAT for [Raspberry Pi](https://www.raspberrypi.org/)** is a display the
 same size of a [Pi Zero](https://www.raspberrypi.org/products/raspberry-pi-zero/). The information
 provided by the manufacturer [Waveshare Electronics](https://www.waveshare.com/) is somewhat awkward,
-I decided to document my journey here, along with the Python script I adopted to control the display.
+so I decided to document my journey here, along with the Python script I adopted to control the display.
 
 ## Hardware
-The display attaches to a Pi Zero via the GPIO.  It is a 128 x 64 1.3" blue OLED display with a 5-ways
+The display attaches to a Pi via the GPIO.  It is a 128x64 1.3" blue OLED display with a 5-way
 joystick on one side, and 3 buttons on the other:
 * Driver: SH1106
 * Interface: 4-wire SPI, 3-wire SPI, I2C
@@ -16,14 +16,14 @@ joystick on one side, and 3 buttons on the other:
 * Operating voltage: 3.3V
 
 The display has some jumpers at the back to be soldered to enable/disable the interfaces it uses.
-I decided to use the default 4-wire SPI which require no soldering at all.
+I decided to use the default 4-wire SPI which require no soldering at all :stuck_out_tongue_closed_eyes:
 
 ## Setup
 I decided to use Python to control my display. There are other options from the manufacturer but I
 didn't explore them.
 
 _**Note: The following steps are deduced from the documents from the manufacturer. I performed them
-in the exact order listed below, but I'm not sure if the ordering is necessary**_
+in the exact order listed below, but I'm not sure if is absolutely necessary**_
 
 ### Prepare raspbian
 * `sudo apt-get update`
@@ -60,6 +60,7 @@ I'm not sure if this is necessary, but well what the hack...
 * Choose 'Yes'
 
 ### Install the luma.oled driver
+Well I'm not too sure about what is the point to install python-pip then remove it......
 * `sudo apt-get install python-pip libfreetype6-dev libjpeg-dev`
 * `sudo -H pip install --upgrade pip`
 * `sudo apt-get purge python-pip`
