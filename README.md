@@ -1,8 +1,6 @@
 # PiDisplay
 Setup and use the Pi OLED HAT by Waveshare
 
-128x64, 1.3inch OLED display HAT for Raspberry Pi
-
 The **1.3" OLED Display HAT for [Raspberry Pi](https://www.raspberrypi.org/)** is a display HAT of the
 same size of a [Pi Zero](https://www.raspberrypi.org/products/raspberry-pi-zero/). The information
 provided by the manufacturer [Waveshare Electronics](https://www.waveshare.com/) is somewhat awkward,
