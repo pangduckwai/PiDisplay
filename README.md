@@ -1,8 +1,8 @@
 # PiDisplay
-Setup and use the Pi OLED HAT by Waveshare
+Setup and use the 1.3" OLED Display HAT for Raspberry Pi by Waveshare
 
-The **1.3" OLED Display HAT for [Raspberry Pi](https://www.raspberrypi.org/)** is a display the
-same size of a [Pi Zero](https://www.raspberrypi.org/products/raspberry-pi-zero/). The information
+The **[1.3" OLED Display HAT for Raspberry Pi](https://www.waveshare.com/product/modules/oleds-lcds/oled/1.3inch-oled-hat.htm)** is a display the
+same size of a [Raspberry Pi Zero](https://www.raspberrypi.org/products/raspberry-pi-zero/). The information
 provided by the manufacturer [Waveshare Electronics](https://www.waveshare.com/) is somewhat awkward,
 so I decided to document my journey here, along with the Python script I adopted to control the display.
 
