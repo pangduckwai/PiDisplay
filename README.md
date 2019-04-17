@@ -1,7 +1,7 @@
 # PiDisplay
 Setup and use the Pi OLED HAT by Waveshare
 
-The **1.3" OLED Display HAT for [Raspberry Pi](https://www.raspberrypi.org/)** is a display HAT of the
+The **1.3" OLED Display HAT for [Raspberry Pi](https://www.raspberrypi.org/)** is a display HAT as the
 same size of a [Pi Zero](https://www.raspberrypi.org/products/raspberry-pi-zero/). The information
 provided by the manufacturer [Waveshare Electronics](https://www.waveshare.com/) is somewhat awkward,
 I decided to document my journey here, along with the Python script I adopted to control the display.
@@ -14,6 +14,7 @@ joystick on one side, and 3 buttons on the other:
 * Display color: blue
 * Resolution: 128 x 64
 * Operating voltage: 3.3V
+
 The display has some jumpers at the back to be soldered to enable/disable the interfaces it uses.
 I decided to use the default 4-wire SPI which require no soldering at all.
 
@@ -70,8 +71,8 @@ That's it, the display is ready to use.
 ### Sample python app
 * Download the sample apps from [https://www.waveshare.com/wiki/File:1.3inch-OLED-HAT-Code.7z](https://www.waveshare.com/wiki/File:1.3inch-OLED-HAT-Code.7z) to somewhere
 * Extract the content somehow, I'm too lazy to find out how to handle 7z on Linux...
-* `cd` to the subfolder containing the Python sample
+* `cd` to the subfolder containing the Python samples
 * `sudo python demo.py`
 
 ## Next step
-The Python code in this repo are adopted from `demo.py` by the manufacturer.
+The Python code in this repo are adopted by me from `demo.py` provided by the manufacturer.
