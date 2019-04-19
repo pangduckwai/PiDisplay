@@ -47,16 +47,29 @@ top = padding
 bottom = height-padding
 xpos = 0
 
-SCREEN_SAVER = 30.0
+SCREEN_SAVER = 20.0
 press = 1
 state = 0
 start = time.time()
-drawn = time.time()
+drawn = 0
 try:
 	while 1:
 		stamp = time.time()
-		if state == 0:
-			if press == 1:
+
+		if GPIO.input(KEY_PRESS_PIN) == 0:
+			press = 1
+
+		if GPIO.input(KEY1_PIN) == 0:
+			press = 2
+
+		if GPIO.input(KEY2_PIN) == 0:
+			press = 4
+
+		if GPIO.input(KEY3_PIN) == 0:
+			press = 8
+
+		if state == 0: # Display is off
+			if press > 0:
 				press = 0
 				state = 1
 				start = time.time()
@@ -67,24 +80,21 @@ try:
 				image = Image.new('1', (width, height))
 				draw = ImageDraw.Draw(image)
 				draw.rectangle((0,0,width,height), outline=0, fill=0)
-			elif GPIO.input(KEY_PRESS_PIN) == 0:
-				press = 1
-			elif GPIO.input(KEY1_PIN) == 0:
-				press = 1
-			elif GPIO.input(KEY2_PIN) == 0:
-				press = 1
-			elif GPIO.input(KEY3_PIN) == 0:
-				press = 1
+
+				time.sleep(0.5)
 			else:
 				pass
-		else: #state == 1
-			if press == 1:
+		elif state == 1:
+			if (press > 0) or ((stamp - start) > SCREEN_SAVER): # Signal to turn off display
 				GPIO.output(RST_PIN,GPIO.LOW)
 				press = 0
 				state = 0
-			elif (GPIO.input(KEY_PRESS_PIN) == 0) or (GPIO.input(KEY1_PIN) == 0) or (GPIO.input(KEY2_PIN) == 0) or (GPIO.input(KEY3_PIN) == 0) or (stamp - start) > SCREEN_SAVER:
-				press = 1 # Button pressed again, turning off display
-			elif (stamp - drawn) > 1:
+
+				time.sleep(0.5)
+			else:
+				pass
+
+			if (stamp - drawn) > 1: #Redraw no more than once per second
 				drawn = stamp
 				with canvas(device) as draw:
 					DTTM = subprocess.check_output("date +\"%Y-%m-%d %H:%M:%S\"", shell = True)
@@ -102,7 +112,9 @@ try:
 					draw.text((xpos, top+45), "Temp:" + str(TEMP), font=font, fill=255)
 			else:
 				pass
+		else:
+			pass
 
 except:
-	print("Stopped")
+	print "Stopped"
 GPIO.cleanup()
