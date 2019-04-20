@@ -15,28 +15,28 @@ from PIL import ImageDraw
 from PIL import ImageFont
 
 #GPIO define
-RST_PIN        = 25
-CS_PIN         = 8
-DC_PIN         = 24
-KEY_UP_PIN     = 6 
-KEY_DOWN_PIN   = 19
-KEY_LEFT_PIN   = 5
-KEY_RIGHT_PIN  = 26
-KEY_PRESS_PIN  = 13
-KEY1_PIN       = 21
-KEY2_PIN       = 20
-KEY3_PIN       = 16
+RST_PIN  = 25
+CS_PIN   = 8
+DC_PIN   = 24
+JS_U_PIN = 6 
+JS_D_PIN = 19
+JS_L_PIN = 5
+JS_R_PIN = 26
+JS_P_PIN = 13
+BTN1_PIN = 21
+BTN2_PIN = 20
+BTN3_PIN = 16
 
 #init GPIO
 GPIO.setmode(GPIO.BCM) 
-GPIO.setup(KEY_UP_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)    # Input with pull-up
-GPIO.setup(KEY_DOWN_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Input with pull-up
-GPIO.setup(KEY_LEFT_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Input with pull-up
-GPIO.setup(KEY_RIGHT_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Input with pull-up
-GPIO.setup(KEY_PRESS_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Input with pull-up
-GPIO.setup(KEY1_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)      # Input with pull-up
-GPIO.setup(KEY2_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)      # Input with pull-up
-GPIO.setup(KEY3_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)      # Input with pull-up
+GPIO.setup(JS_U_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Input with pull-up
+GPIO.setup(JS_D_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Input with pull-up
+GPIO.setup(JS_L_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Input with pull-up
+GPIO.setup(JS_R_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Input with pull-up
+GPIO.setup(JS_P_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Input with pull-up
+GPIO.setup(BTN1_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Input with pull-up
+GPIO.setup(BTN2_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Input with pull-up
+GPIO.setup(BTN3_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Input with pull-up
 
 font = ImageFont.load_default()
 width = 128
@@ -48,24 +48,29 @@ bottom = height-padding
 xpos = 0
 
 SCREEN_SAVER = 20.0
+
+GPIO.add_event_detect(JS_P_PIN, GPIO.RISING)
+GPIO.add_event_detect(BTN1_PIN, GPIO.RISING)
+GPIO.add_event_detect(BTN2_PIN, GPIO.RISING)
+GPIO.add_event_detect(BTN3_PIN, GPIO.RISING)
+
 press = 1
 state = 0
 start = time.time()
-drawn = 0
 try:
-	while 1:
+	while True:
 		stamp = time.time()
 
-		if GPIO.input(KEY_PRESS_PIN) == 0:
+		if GPIO.event_detected(JS_P_PIN):
 			press = 1
 
-		if GPIO.input(KEY1_PIN) == 0:
+		if GPIO.event_detected(BTN1_PIN):
 			press = 2
 
-		if GPIO.input(KEY2_PIN) == 0:
+		if GPIO.event_detected(BTN2_PIN):
 			press = 4
 
-		if GPIO.input(KEY3_PIN) == 0:
+		if GPIO.event_detected(BTN3_PIN):
 			press = 8
 
 		if state == 0: # Display is off
@@ -80,8 +85,6 @@ try:
 				image = Image.new('1', (width, height))
 				draw = ImageDraw.Draw(image)
 				draw.rectangle((0,0,width,height), outline=0, fill=0)
-
-				time.sleep(0.5)
 			else:
 				pass
 		elif state == 1:
@@ -89,31 +92,27 @@ try:
 				GPIO.output(RST_PIN,GPIO.LOW)
 				press = 0
 				state = 0
-
-				time.sleep(0.5)
 			else:
 				pass
 
-			if (stamp - drawn) > 1: #Redraw no more than once per second
-				drawn = stamp
-				with canvas(device) as draw:
-					DTTM = subprocess.check_output("date +\"%Y-%m-%d %H:%M:%S\"", shell = True)
-					ADDR = subprocess.check_output("hostname -I | cut -d\' \' -f1", shell = True )
-					CPUL = subprocess.check_output("top -bn1 | grep load | awk '{printf \"CPU : %.2f\", $(NF-2)}'", shell = True )
-					MEMU = subprocess.check_output("free -m | awk 'NR==2{printf \"Mem : %s/%sMB %.2f%%\", $3,$2,$3*100/$2 }'", shell = True )
-					DISK = subprocess.check_output("df -h | awk '$NF==\"/\"{printf \"Disk: %d/%dGB %s\", $3,$2,$5}'", shell = True )
-					TEMP = subprocess.check_output("/opt/vc/bin/vcgencmd measure_temp | awk '{gsub(/temp=/,\" \"); print}'", shell = True )
+			with canvas(device) as draw:
+				DTTM = subprocess.check_output("date +\"%Y-%m-%d %H:%M:%S\"", shell = True)
+				ADDR = subprocess.check_output("hostname -I | cut -d\' \' -f1", shell = True )
+				CPUL = subprocess.check_output("top -bn1 | awk 'NR==3{printf \"CPU : %.1f%% idle\", $8}'", shell = True )
+				MEMU = subprocess.check_output("free -m | awk 'NR==2{printf \"Mem : %s/%sMB %.2f%%\", $3,$2,$3*100/$2 }'", shell = True )
+				DISK = subprocess.check_output("df -h | awk '$NF==\"/\"{printf \"Disk: %d/%dGB %s\", $3,$2,$5}'", shell = True )
+				TEMP = subprocess.check_output("/opt/vc/bin/vcgencmd measure_temp | awk '{gsub(/temp=/,\" \"); print}'", shell = True )
 
-					draw.text((xpos, top),    str(DTTM), font=font, fill=255)
-					draw.text((xpos, top+12), "IP  : " + str(ADDR),  font=font, fill=255)
-					draw.text((xpos, top+20), str(CPUL), font=font, fill=255)
-					draw.text((xpos, top+28), str(MEMU),  font=font, fill=255)
-					draw.text((xpos, top+36), str(DISK),  font=font, fill=255)
-					draw.text((xpos, top+45), "Temp:" + str(TEMP), font=font, fill=255)
-			else:
-				pass
+				draw.text((xpos, top),    str(DTTM), font=font, fill=255)
+				draw.text((xpos, top+12), "IP  : " + str(ADDR),  font=font, fill=255)
+				draw.text((xpos, top+20), str(CPUL), font=font, fill=255)
+				draw.text((xpos, top+28), str(MEMU),  font=font, fill=255)
+				draw.text((xpos, top+36), str(DISK),  font=font, fill=255)
+				draw.text((xpos, top+45), "Temp:" + str(TEMP), font=font, fill=255)
 		else:
 			pass
+
+		time.sleep(1)
 
 except:
 	print "Stopped"
