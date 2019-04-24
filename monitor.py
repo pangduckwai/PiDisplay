@@ -35,7 +35,7 @@ height = 64
 padding = -2
 top = padding
 bottom = height-padding
-xpos = 2
+xpos = 0
 
 # init GPIO
 GPIO.setmode(GPIO.BCM) 
@@ -62,18 +62,19 @@ start = time.time()
 def draw_process(channel):
 	with canvas(device) as draw:
 		DTTM = subprocess.check_output("date +\"%Y-%m-%d %H:%M:%S\"", shell = True)
-		ADDR = subprocess.check_output("hostname -I | cut -d\' \' -f1", shell = True )
+		ADDR = subprocess.check_output("hostname -I | awk '{printf \"IP  : %s\", $1}'", shell = True )
 		CPUL = subprocess.check_output("top -bn1 | awk 'NR==3{printf \"CPU : %.1f%% idle\", $8}'", shell = True )
 		MEMU = subprocess.check_output("free -m | awk 'NR==2{printf \"Mem : %s/%sMB %.2f%%\", $3,$2,$3*100/$2 }'", shell = True )
 		DISK = subprocess.check_output("df -h | awk '$NF==\"/\"{printf \"Disk: %d/%dGB %s\", $3,$2,$5}'", shell = True )
-		TEMP = subprocess.check_output("/opt/vc/bin/vcgencmd measure_temp | awk '{gsub(/temp=/,\" \"); print}'", shell = True )
+		TEMP = subprocess.check_output("/opt/vc/bin/vcgencmd measure_temp | awk '{gsub(/temp=/,\"\"); printf \"Temp: %s\", $0}'", shell = True )
+		# or use this for temperature? cat /sys/class/thermal/thermal_zone0/temp
 
 		draw.text((xpos, top),    str(DTTM), font=font, fill=255)
-		draw.text((xpos, top+12), "IP  : " + str(ADDR),  font=font, fill=255)
+		draw.text((xpos, top+12), str(ADDR), font=font, fill=255)
 		draw.text((xpos, top+20), str(CPUL), font=font, fill=255)
-		draw.text((xpos, top+28), str(MEMU),  font=font, fill=255)
-		draw.text((xpos, top+36), str(DISK),  font=font, fill=255)
-		draw.text((xpos, top+45), "Temp:" + str(TEMP), font=font, fill=255)
+		draw.text((xpos, top+28), str(MEMU), font=font, fill=255)
+		draw.text((xpos, top+36), str(DISK), font=font, fill=255)
+		draw.text((xpos, top+45), str(TEMP), font=font, fill=255)
 
 def main_process(channel):
 	global serial
@@ -81,9 +82,9 @@ def main_process(channel):
 	global draw
 	global state
 	global start
-	if state == 0: # Display is off
-		if channel > 0:
-			state = 1
+	if state <= 0: # Display is off
+		if channel > 0: # A button is pressed, turn on display
+			state = channel
 			start = time.time()
 
 			# Initialize the display...
@@ -95,16 +96,12 @@ def main_process(channel):
 			draw_process(channel)
 		else:
 			pass
-	elif state == 1:
-		if (channel > 0) or ((stamp - start) > SCREEN_SAVER): # Signal to turn off display
+	else: # Display is on
+		if (channel > 0) or ((stamp - start) > SCREEN_SAVER): # A button is pressed or timed out, turn off display
 			GPIO.output(RST_PIN,GPIO.LOW)
 			state = 0
-		else:
-			pass
-
-		draw_process(channel)
-	else:
-		pass
+		else: # state > 0 && channel == 0 && not-yet-timeout, refresh screen
+			draw_process(state)
 
 GPIO.add_event_detect(JS_P_PIN, GPIO.RISING, callback=main_process, bouncetime=200)
 GPIO.add_event_detect(BTN1_PIN, GPIO.RISING, callback=main_process, bouncetime=200)
@@ -112,7 +109,7 @@ GPIO.add_event_detect(BTN2_PIN, GPIO.RISING, callback=main_process, bouncetime=2
 GPIO.add_event_detect(BTN3_PIN, GPIO.RISING, callback=main_process, bouncetime=200)
 
 try:
-	main_process(1)
+	main_process(JS_P_PIN)
 	while True:
 		stamp = time.time()
 		main_process(0)
