@@ -81,7 +81,7 @@ The Python code in this repo (`monitor.py`) display system information of the Pi
 1. **Button 1** - Display information relating to the main purpose of the Pi: _Disk space_ and _WiFi_.
 2. **Button 2** - Display _IP Address_, _CPU Idle %_, _Memory usage_ and _System temperature_.
 3. **Button 3** - Display the system shutdown dialog, use the Joystick to select options, press **Button 3** to confirm your choice.
-The screen will turn off after idling for around 20 seconds.
+* The screen will turn off after idling for around 20 seconds.
 
 ### CPU usage
 The original version was adopted directly from `demo.py` provided by the manufacturer, which is no good for 'production' use. Because your Pi will be too busy looking for button inputs instead of doing anything else useful.
