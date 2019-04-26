@@ -84,7 +84,7 @@ The Python code in this repo (`monitor.py`) display system information of the Pi
 The screen will turn off after idling for around 20 seconds.
 
 ### CPU usage
-The original Python code in this repo (`monitor.py`) is adopted from `demo.py` provided by the manufacturer, which is no good for 'production' use. Because your Pi will be too busy looking for button inputs instead of doing anything else useful.
+The original version was adopted directly from `demo.py` provided by the manufacturer, which is no good for 'production' use. Because your Pi will be too busy looking for button inputs instead of doing anything else useful.
 
 The latest version utilize GPIO input detection instead of busy wait, which is much more reasonable CPU-wise.
 
