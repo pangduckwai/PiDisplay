@@ -78,7 +78,7 @@ That's it, the display is ready to use.
 
 ## Next step
 The Python code in this repo (`monitor.py`) display system information of the Pi:
-1. **Button 1** - Display system information of the Pi, such as _Disk space_, _WiFi_, _IP Address_, _CPU Idle %_, _Memory usage_, _Network status and _System temperature_, in 2 pages; use the Left/Right Joystick to toggle between these pages.
+1. **Button 1** - Display system information of the Pi, such as _Disk space_, _WiFi_, _IP Address_, _CPU Idle %_, _Memory usage_, _Network status_ and _System temperature_, in 2 pages; use the Left/Right Joystick to toggle between these pages.
 1. **Button 3** - Display the system action dialog, use the Up/Down/Left/Right Joystick to select the options between _Reboot_, _Shutdown_, _Re-mount Samba_ and _Reload the USB driver_. Press **Button 3** to confirm your choice.
 * The screen will turn off after idling for around 20 seconds.
 
