@@ -69,19 +69,15 @@ def take_act(channel):
 	if state == BTN3_PIN:
 		if vert == 1:
 			if horz == 1:
-				draw_scn(996)
-				os.system("sudo shutdown -r now")
-			else:
-				draw_scn(995)
+				show_stt(995)
 				os.system("sudo shutdown -h now")
-		elif vert == 2:
-			if horz == 1:
-				draw_scn(997)
-				os.system("sudo /usr/bin/usb_drive.sh remount")
 			else:
-				draw_scn(998)
-				os.system("sudo /usr/bin/usb_drive.sh replug")
-			start = stamp - SCREEN_SAVER - 15
+				show_stt(996)
+				os.system("sudo shutdown -r now")
+		elif vert == 2:
+			show_stt(997)
+			os.system("sudo usb_drive.sh refresh")
+			start = stamp - SCREEN_SAVER - 10
 		else:
 			show_stt(BTN1_PIN)
 	else:
@@ -148,40 +144,35 @@ def draw_scn(channel):
 			x6 = x3+9
 			y2 = y1*vert
 			LINE1 = "| Shutdown..."
-			LINE2 = "| Refresh..."
+			LINE2 = "| Refresh"
 			LINE3 = "| Cancel"
 
 			if vert == 1:
 				if horz == 1:
-					LINE1 = "> Reboot"
-				else:
 					LINE1 = "> Shutdown"
-			elif vert == 2:
-				if horz == 1:
-					LINE2 = "> Remount SMB"
 				else:
-					LINE2 = "> Reload USB"
+					LINE1 = "> Reboot"
+			elif vert == 2:
+				LINE2 = "> Refresh"
 			else:
 				LINE3 = "> Cancel"
 
-			if vert == 3:
-				draw.polygon([(x1,y2+6),(x2,y2-1),(x2,y2+4),(x3,y2+4),(x3,y2+8),(x2,y2+8),(x2,y2+13)], outline=255, fill=1)
-			else:
+			if vert == 1:
 				if horz == 1:
 					draw.polygon([(x4,y2+6),(x5,y2-1),(x5,y2+4),(x6,y2+4),(x6,y2+8),(x5,y2+8),(x5,y2+13)], outline=255, fill=0)
 					draw.polygon([(x1,y2+6),(x2,y2-1),(x2,y2+4),(x3,y2+4),(x3,y2+8),(x2,y2+8),(x2,y2+13)], outline=255, fill=1)
 				else:
 					draw.polygon([(x1,y2+6),(x2,y2-1),(x2,y2+4),(x3,y2+4),(x3,y2+8),(x2,y2+8),(x2,y2+13)], outline=255, fill=0)
 					draw.polygon([(x4,y2+6),(x5,y2-1),(x5,y2+4),(x6,y2+4),(x6,y2+8),(x5,y2+8),(x5,y2+13)], outline=255, fill=1)
+			else:
+				draw.polygon([(x1,y2+6),(x2,y2-1),(x2,y2+4),(x3,y2+4),(x3,y2+8),(x2,y2+8),(x2,y2+13)], outline=255, fill=1)
 
 		elif channel == 995:
 			LINE2 = " Shutting down..."
 		elif channel == 996:
 			LINE2 = " Rebooting..."
 		elif channel == 997:
-			LINE2 = " Resetting SMB..."
-		elif channel == 998:
-			LINE2 = " Resetting USB..."
+			LINE2 = " Refreshing..."
 		else:
 			pass
 
