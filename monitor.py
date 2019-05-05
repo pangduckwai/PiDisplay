@@ -36,12 +36,9 @@ font = ImageFont.load_default()
 width = 128
 height = 64
 x0 = 0
-x1 = 70
+x1 = 84
 y0 = -2
 y1 = 12
-# ypos2 = 24
-# ypos3 = 36
-# ypos4 = 48
 
 # init GPIO
 GPIO.setmode(GPIO.BCM) 
@@ -61,8 +58,8 @@ draw = ImageDraw.Draw(Image.new('1', (width, height)))
 draw.rectangle((0,0,width,height), outline=0, fill=0)
 
 state = 0 #System state: 0 - scrren is off; equal to channel number (e.g. BTN2_PIN, JS_P_PIN) otherwise
-horz = 0 #Selection choice: 0 - Left; 1 - Right
-vert = 4 #Selection choice: 1 - Top; 2 - Second; 3 - Third; 4 - Bottom
+horz = 1 #Selection choice: 0 - Right; 1 - Left
+vert = 3 #Selection choice: 1 - Top; 2 - Middle; 3 - Bottom
 stamp = time.time() #Current timestamp
 start = time.time() #Start screen saver count down
 
@@ -71,22 +68,24 @@ def take_act(channel):
 	global vert
 	if state == BTN3_PIN:
 		if vert == 1:
-			draw_scn(RST_PIN)
-			os.system("sudo shutdown -h now")
+			if horz == 1:
+				draw_scn(996)
+				os.system("sudo shutdown -r now")
+			else:
+				draw_scn(995)
+				os.system("sudo shutdown -h now")
 		elif vert == 2:
-			# Remount
-			draw_scn(997)
-			start = stamp - SCREEN_SAVER - 10
-			os.system("sudo /usr/bin/usb_drive.sh remount")
-		elif vert == 3:
-			# Replug USB
-			draw_scn(998)
-			start = stamp - SCREEN_SAVER - 10
-			os.system("sudo /usr/bin/usb_drive.sh replug")
+			if horz == 1:
+				draw_scn(997)
+				os.system("sudo /usr/bin/usb_drive.sh remount")
+			else:
+				draw_scn(998)
+				os.system("sudo /usr/bin/usb_drive.sh replug")
+			start = stamp - SCREEN_SAVER - 15
 		else:
 			show_stt(BTN1_PIN)
 	else:
-		vert = 4 # Default
+		vert = 3 # Default
 		show_stt(BTN3_PIN)
 
 def select_h(channel):
@@ -112,7 +111,7 @@ def select_v(channel):
 			vert = vert - 1
 	elif channel == JS_D_PIN:
 		start = time.time()
-		if vert < 4:
+		if vert < 3:
 			vert = vert + 1
 	else:
 		pass
@@ -125,30 +124,60 @@ def draw_scn(channel):
 		LINE3 = ""
 		LINE4 = ""
 		if channel == BTN1_PIN:
-			if horz == 0:
+			if horz == 1:
 				ssid = subprocess.check_output("iwgetid --raw | awk '{printf \"WiFi:%s\", $0}'", shell = True)
 				freq = subprocess.check_output("iwgetid --freq | awk '{gsub(/Frequency:/,\"\"); printf \" %.1f %s\", $2,$3}'", shell = True)
-				LINE1 = subprocess.check_output("df -h /mnt/usb | awk '$NF==\"/mnt/usb\"{printf \"Disk:%s/%s %s\", $3,$2,$5}'", shell = True )
-				LINE2 = ssid + freq
+				LINE1 = subprocess.check_output("hostname -I | awk '{printf \"IP :%s\", $1}'", shell = True )
+				LINE2 = subprocess.check_output("df -h /mnt/usb | awk '$NF==\"/mnt/usb\"{printf \"Disk:%s/%s %s\", $3,$2,$5}'", shell = True )
+				LINE3 = ssid + freq
+				LINE4 = subprocess.check_output("cat /sys/class/thermal/thermal_zone0/temp | awk '{printf \"Temp:%.1fC\", $1/1000}'", shell = True )
+				draw.rectangle((0,61,84,63), outline=255, fill=1)
+				draw.rectangle((85,61,127,63), outline=255, fill=0)
+			else:
+				LINE1 = subprocess.check_output("top -bn1 | awk 'NR==3{printf \"CPU:%.1f%% idle\", $8}'", shell = True )
+				LINE2 = subprocess.check_output("free -mh | awk 'NR==2{printf \"Mem:%s/%s %.1f%%\", $3,$2,$3*100/$2 }'", shell = True )
 				LINE3 = "  in Kbps  out Kbps"
 				LINE4 = subprocess.check_output("ifstat -bT 0.1 1 | awk 'NR==3{printf \"%9.2f %9.2f\",$3,$4}'", shell = True)
-				draw.rectangle((19,61,48,63), outline=255, fill=0)
-				draw.rectangle((49,61,109,63), outline=255, fill=1)
-			else:
-				LINE1 = subprocess.check_output("hostname -I | awk '{printf \"IP :%s\", $1}'", shell = True )
-				LINE2 = subprocess.check_output("top -bn1 | awk 'NR==3{printf \"CPU:%.1f%% idle\", $8}'", shell = True )
-				LINE3 = subprocess.check_output("free -mh | awk 'NR==2{printf \"Mem:%s/%s %.1f%%\", $3,$2,$3*100/$2 }'", shell = True )
-				LINE4 = subprocess.check_output("cat /sys/class/thermal/thermal_zone0/temp | awk '{printf \"Tmp:%.1fC\", $1/1000}'", shell = True )
-				draw.rectangle((19,61,78,63), outline=255, fill=1)
-				draw.rectangle((79,61,109,63), outline=255, fill=0)
+				draw.rectangle((0,61,42,63), outline=255, fill=0)
+				draw.rectangle((43,61,127,63), outline=255, fill=1)
 		elif channel == BTN3_PIN:
-			LINE1 = "> Shutdown"
-			LINE2 = "> Reset SMB"
-			LINE3 = "> Reset USB"
-			LINE4 = "> Cancel"
-			draw.polygon([(x1,y1*vert+6),(x1+7,y1*vert-1),(x1+7,y1*vert+4),(x1+14,y1*vert+4),(x1+14,y1*vert+8),(x1+7,y1*vert+8),(x1+7,y1*vert+13)], outline=255, fill=1)
-		elif channel == RST_PIN:
+			x2 = x1+7
+			x3 = x1+14
+			x4 = x1+9
+			x5 = x2+9
+			x6 = x3+9
+			y2 = y1*vert
+			LINE1 = "| Shutdown..."
+			LINE2 = "| Refresh..."
+			LINE3 = "| Cancel"
+
+			if vert == 1:
+				if horz == 1:
+					LINE1 = "> Reboot"
+				else:
+					LINE1 = "> Shutdown"
+			elif vert == 2:
+				if horz == 1:
+					LINE2 = "> Remount SMB"
+				else:
+					LINE2 = "> Reload USB"
+			else:
+				LINE3 = "> Cancel"
+
+			if vert == 3:
+				draw.polygon([(x1,y2+6),(x2,y2-1),(x2,y2+4),(x3,y2+4),(x3,y2+8),(x2,y2+8),(x2,y2+13)], outline=255, fill=1)
+			else:
+				if horz == 1:
+					draw.polygon([(x4,y2+6),(x5,y2-1),(x5,y2+4),(x6,y2+4),(x6,y2+8),(x5,y2+8),(x5,y2+13)], outline=255, fill=0)
+					draw.polygon([(x1,y2+6),(x2,y2-1),(x2,y2+4),(x3,y2+4),(x3,y2+8),(x2,y2+8),(x2,y2+13)], outline=255, fill=1)
+				else:
+					draw.polygon([(x1,y2+6),(x2,y2-1),(x2,y2+4),(x3,y2+4),(x3,y2+8),(x2,y2+8),(x2,y2+13)], outline=255, fill=0)
+					draw.polygon([(x4,y2+6),(x5,y2-1),(x5,y2+4),(x6,y2+4),(x6,y2+8),(x5,y2+8),(x5,y2+13)], outline=255, fill=1)
+
+		elif channel == 995:
 			LINE2 = " Shutting down..."
+		elif channel == 996:
+			LINE2 = " Rebooting..."
 		elif channel == 997:
 			LINE2 = " Resetting SMB..."
 		elif channel == 998:
