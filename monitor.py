@@ -112,7 +112,7 @@ def select_v(channel):
 	else:
 		pass
 
-#iwgetid | awk '{print $1 " scan"}' | xargs -l sudo iwlist | grep SSID | sed 's/ESSID:"//g; s/"$//g'
+#iwgetid | awk '{print $1 " scan"}' | xargs -l sudo iwlist | grep SSID | sed 's/^.*ESSID:"\(..*\)".*$/\1/'
 def draw_scn(channel):
 	with canvas(device) as draw:
 		LINE0 = subprocess.check_output("date +\"%Y-%m-%d %H:%M:%S\"", shell = True)
