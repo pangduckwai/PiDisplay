@@ -11,6 +11,7 @@ import sys
 import time
 import subprocess
 import os
+import string
 
 from PIL import Image
 from PIL import ImageDraw
@@ -30,6 +31,7 @@ BTN2_PIN = 20
 BTN3_PIN = 16
 
 # Some constants
+SCREEN_LINES = 4
 SCREEN_SAVER = 20.0
 CHAR_WIDTH = 19
 font = ImageFont.load_default()
@@ -62,6 +64,10 @@ horz = 1 #Selection choice: 0 - Right; 1 - Left
 vert = 3 #Selection choice: 1 - Top; 2 - Middle; 3 - Bottom
 stamp = time.time() #Current timestamp
 start = time.time() #Start screen saver count down
+iface = ""
+aplist = []
+idxWin = 0
+idxLen = 0
 
 def take_act(channel):
 	global start
@@ -84,6 +90,23 @@ def take_act(channel):
 		vert = 3 # Default
 		show_stt(BTN3_PIN)
 
+def scan_wifi(channel):
+	global aplist
+	global idxWin
+	global idxLen
+	result = os.popen("iwlist {0} scan 2>/dev/null | grep '^..*ESSID:\"..*\"$' | sed 's/^.*ESSID:\"\\(..*\\)\".*$/\\1/'".format(iface)).read()
+	aplist = result.splitlines()
+	idxLen = len(aplist)
+	if idxWin >= idxLen:
+		idxWin = idxLen - 1
+	elif (idxWin + SCREEN_LINES) > idxLen:
+		idxWin = idxLen - SCREEN_LINES
+		if idxWin < 0:
+			idxWin = 0
+
+	print "AP found: ", idxLen #TEMP!!!
+	show_stt(channel)
+
 def select_h(channel):
 	global start
 	global horz
@@ -99,21 +122,35 @@ def select_h(channel):
 		pass
 
 def select_v(channel):
+	global idxWin
 	global start
 	global vert
-	if channel == JS_U_PIN:
-		start = time.time()
-		if vert > 1:
-			vert = vert - 1
-	elif channel == JS_D_PIN:
-		start = time.time()
-		if vert < 3:
-			vert = vert + 1
+	if state == BTN2_PIN:
+		print "Index: ", idxWin #TEMP!!!
+		if channel == JS_U_PIN:
+			start = time.time()
+			if idxWin > 0:
+				idxWin = idxWin - 1
+		elif channel == JS_D_PIN:
+			start = time.time()
+			if (idxWin + SCREEN_LINES) < idxLen:
+				idxWin = idxWin + 1
+		else:
+			pass
 	else:
-		pass
+		if channel == JS_U_PIN:
+			start = time.time()
+			if vert > 1:
+				vert = vert - 1
+		elif channel == JS_D_PIN:
+			start = time.time()
+			if vert < 3:
+				vert = vert + 1
+		else:
+			pass
 
-#iwgetid | awk '{print $1 " scan"}' | xargs -l sudo iwlist | grep SSID | sed 's/^.*ESSID:"\(..*\)".*$/\1/'
 def draw_scn(channel):
+	global idxLen
 	with canvas(device) as draw:
 		LINE0 = subprocess.check_output("date +\"%Y-%m-%d %H:%M:%S\"", shell = True)
 		LINE1 = ""
@@ -168,6 +205,19 @@ def draw_scn(channel):
 			else:
 				draw.polygon([(x1,y2+6),(x2,y2-1),(x2,y2+4),(x3,y2+4),(x3,y2+8),(x2,y2+8),(x2,y2+13)], outline=255, fill=1)
 
+		elif channel == BTN2_PIN:
+			if (idxWin >= 0) and (idxWin < idxLen):
+				LINE1 = aplist[idxWin]
+
+			if (idxWin + 1 < idxLen):
+				LINE2 = aplist[idxWin + 1]
+
+			if (idxWin + 2 < idxLen):
+				LINE3 = aplist[idxWin + 2]
+
+			if (idxWin + 3 < idxLen):
+				LINE4 = aplist[idxWin + 3]
+
 		elif channel == 995:
 			LINE2 = " Shutting down..."
 		elif channel == 996:
@@ -219,7 +269,7 @@ def show_stt(channel):
 		else:
 			pass
 	else: # Display is on
-		if ((channel > 0) and (channel == state)) or ((stamp - start) > SCREEN_SAVER): # A button is pressed or timed out, turn off display
+		if ((channel > 0) and (channel == state) and (channel != BTN2_PIN)) or ((stamp - start) > SCREEN_SAVER): # A button is pressed or timed out, turn off display
 			GPIO.output(RST_PIN,GPIO.LOW)
 			state = 0
 		elif (channel > 0) and (channel != state):
@@ -230,11 +280,14 @@ def show_stt(channel):
 			draw_scn(state)
 
 GPIO.add_event_detect(BTN1_PIN, GPIO.RISING, callback=show_stt, bouncetime=200)
+GPIO.add_event_detect(BTN2_PIN, GPIO.RISING, callback=scan_wifi, bouncetime=200)
 GPIO.add_event_detect(BTN3_PIN, GPIO.RISING, callback=take_act, bouncetime=200)
 GPIO.add_event_detect(JS_L_PIN, GPIO.RISING, callback=select_h, bouncetime=200)
 GPIO.add_event_detect(JS_R_PIN, GPIO.RISING, callback=select_h, bouncetime=200)
 GPIO.add_event_detect(JS_U_PIN, GPIO.RISING, callback=select_v, bouncetime=200)
 GPIO.add_event_detect(JS_D_PIN, GPIO.RISING, callback=select_v, bouncetime=200)
+
+iface = subprocess.check_output("iwgetid | awk '{print $1}'", shell = True).rstrip("\r\n")
 
 # Main Loop
 try:
