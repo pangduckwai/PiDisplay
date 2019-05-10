@@ -69,6 +69,8 @@ aplist = []
 idxWin = 0
 idxLen = 0
 
+test = 0 # For testing!@1!!!!!!!!!!!!!!!!!!!!
+
 def take_act(channel):
 	global start
 	global vert
@@ -94,12 +96,24 @@ def scan_wifi(channel):
 	global aplist
 	global idxWin
 	global idxLen
-	result = os.popen("iwlist {0} scan 2>/dev/null | grep '^..*ESSID:\"..*\"$' | sed 's/^.*ESSID:\"\\(..*\\)\".*$/\\1/'".format(iface)).read()
-	aplist = result.splitlines()
+	global test
+	# result = os.popen("iwlist {0} scan 2>/dev/null | grep '^..*ESSID:\"..*\"$' | sed 's/^.*ESSID:\"\\(..*\\)\".*$/\\1/'".format(iface)).read()
+	# aplist = result.splitlines()
+	if test == 0:
+		test = test + 1
+		aplist = ["one", "two", "three", "four", "five", "six", "seven"]
+	elif test == 1:
+		test = test + 1
+		aplist = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
+	elif test == 2:
+		test = test + 1
+		aplist = ["one", "two", "three", "four", "five"]
+	elif test == 3:
+		test = 0
+		aplist = ["one", "two", "three"]
+
 	idxLen = len(aplist)
-	if idxWin >= idxLen:
-		idxWin = idxLen - 1
-	elif (idxWin + SCREEN_LINES) > idxLen:
+	if (idxWin + SCREEN_LINES) > idxLen:
 		idxWin = idxLen - SCREEN_LINES
 		if idxWin < 0:
 			idxWin = 0
