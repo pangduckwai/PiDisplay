@@ -41,6 +41,11 @@ x0 = 0
 x1 = 84
 y0 = -2
 y1 = 12
+x2 = x1+7
+x3 = x1+14
+x4 = x1+9
+x5 = x2+9
+x6 = x3+9
 
 # init GPIO
 GPIO.setmode(GPIO.BCM) 
@@ -96,21 +101,27 @@ def scan_wifi(channel):
 	global aplist
 	global idxWin
 	global idxLen
+	global start
+	global vert
 	global test
+	start = time.time()
 	# result = os.popen("iwlist {0} scan 2>/dev/null | grep '^..*ESSID:\"..*\"$' | sed 's/^.*ESSID:\"\\(..*\\)\".*$/\\1/'".format(iface)).read()
 	# aplist = result.splitlines()
 	if test == 0:
 		test = test + 1
-		aplist = ["one", "two", "three", "four", "five", "six", "seven"]
+		aplist = ["one", "two", "three"]
 	elif test == 1:
 		test = test + 1
-		aplist = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
+		aplist = ["one", "two", "three", "four", "five", "six", "seven"]
 	elif test == 2:
 		test = test + 1
-		aplist = ["one", "two", "three", "four", "five"]
+		aplist = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
 	elif test == 3:
+		test = test + 1
+		aplist = ["one", "two", "three", "four", "five"]
+	elif test == 4:
 		test = 0
-		aplist = ["one", "two", "three"]
+		aplist = ["one", "two"]
 
 	idxLen = len(aplist)
 	if (idxWin + SCREEN_LINES) > idxLen:
@@ -118,40 +129,51 @@ def scan_wifi(channel):
 		if idxWin < 0:
 			idxWin = 0
 
-	print "AP found: ", idxLen #TEMP!!!
+	if vert > idxLen:
+		vert = idxLen
+
 	show_stt(channel)
 
 def select_h(channel):
 	global start
 	global horz
-	if channel == JS_L_PIN:
-		start = time.time()
-		horz = 1
-		draw_scn(state)
-	elif channel == JS_R_PIN:
-		start = time.time()
-		horz = 0
-		draw_scn(state)
+	if state == BTN2_PIN:
+		if channel == JS_L_PIN or channel == JS_R_PIN:
+			print "Selected: ", aplist[idxWin + vert - 1] #TEMP!!!
 	else:
-		pass
+		if channel == JS_L_PIN:
+			start = time.time()
+			horz = 1
+			draw_scn(state)
+		elif channel == JS_R_PIN:
+			start = time.time()
+			horz = 0
+			draw_scn(state)
+		else:
+			pass
 
 def select_v(channel):
 	global idxWin
 	global start
 	global vert
 	if state == BTN2_PIN:
-		print "Index: ", idxWin #TEMP!!!
 		if channel == JS_U_PIN:
 			start = time.time()
-			if idxWin > 0:
+			if vert > 1:
+				vert = vert - 1
+			elif idxWin > 0:
 				idxWin = idxWin - 1
 		elif channel == JS_D_PIN:
 			start = time.time()
-			if (idxWin + SCREEN_LINES) < idxLen:
+			if vert < 4 and vert < idxLen:
+				vert = vert + 1
+			elif (idxWin + SCREEN_LINES) < idxLen:
 				idxWin = idxWin + 1
 		else:
 			pass
 	else:
+		if vert > 3:
+			vert = 3
 		if channel == JS_U_PIN:
 			start = time.time()
 			if vert > 1:
@@ -189,11 +211,6 @@ def draw_scn(channel):
 				draw.rectangle((0,61,42,63), outline=255, fill=0)
 				draw.rectangle((43,61,127,63), outline=255, fill=1)
 		elif channel == BTN3_PIN:
-			x2 = x1+7
-			x3 = x1+14
-			x4 = x1+9
-			x5 = x2+9
-			x6 = x3+9
 			y2 = y1*vert
 			LINE1 = "| Shutdown..."
 			LINE2 = "| Refresh"
@@ -220,17 +237,26 @@ def draw_scn(channel):
 				draw.polygon([(x1,y2+6),(x2,y2-1),(x2,y2+4),(x3,y2+4),(x3,y2+8),(x2,y2+8),(x2,y2+13)], outline=255, fill=1)
 
 		elif channel == BTN2_PIN:
+			y2 = y1*vert
 			if (idxWin >= 0) and (idxWin < idxLen):
 				LINE1 = aplist[idxWin]
-
 			if (idxWin + 1 < idxLen):
 				LINE2 = aplist[idxWin + 1]
-
 			if (idxWin + 2 < idxLen):
 				LINE3 = aplist[idxWin + 2]
-
 			if (idxWin + 3 < idxLen):
 				LINE4 = aplist[idxWin + 3]
+
+			draw.polygon([(x1,y2+6),(x2,y2-1),(x2,y2+4),(x3,y2+4),(x3,y2+8),(x2,y2+8),(x2,y2+13)], outline=255, fill=1)
+			draw.rectangle((125,12,127,60), outline=255, fill=0)
+
+			thumb_s = 48.0 / idxLen #Step
+			thumb_h = thumb_s * 4 #Because the screen can display 4 rows at a time
+			thumb_0 = idxWin * thumb_s + 12
+			thumb_1 = thumb_0 + thumb_h
+			if thumb_1 > 60:
+				thumb_1 = 60
+			draw.rectangle((125, thumb_0, 127, thumb_1), outline=255, fill=1)
 
 		elif channel == 995:
 			LINE2 = " Shutting down..."
