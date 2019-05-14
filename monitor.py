@@ -47,6 +47,10 @@ x4 = x1+9
 x5 = x2+9
 x6 = x3+9
 
+choice1 = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"]
+choice2 = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
+choice3 = ["0","1","2","3","4","5","6","7","8","9","!","@","#","$","%","^","&","*","(",")",",",".","?",":",";","'"]
+
 # init GPIO
 GPIO.setmode(GPIO.BCM) 
 GPIO.setup(JS_U_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Input with pull-up
@@ -71,75 +75,109 @@ stamp = time.time() #Current timestamp
 start = time.time() #Start screen saver count down
 iface = ""
 aplist = []
+apIndx = -1
 idxWin = 0
 idxLen = 0
+pwdLst = ["a", "b", "c"] #TEMP!!!
+pwdLen = 0
 
 test = 0 # For testing!@1!!!!!!!!!!!!!!!!!!!!
 
-def take_act(channel):
+def click_b3(channel):
 	global start
 	global vert
+	global apIndx
 	if state == BTN3_PIN:
+		apIndx = -1
 		if vert == 1:
 			if horz == 1:
-				show_stt(995)
+				main_fun(995)
 				os.system("sudo shutdown -h now")
 			else:
-				show_stt(996)
+				main_fun(996)
 				os.system("sudo shutdown -r now")
 		elif vert == 2:
-			show_stt(997)
+			main_fun(997)
 			os.system("sudo usb_drive.sh refresh")
 			start = stamp - SCREEN_SAVER - 10
 		else:
-			show_stt(BTN1_PIN)
+			main_fun(BTN1_PIN)
 	else:
 		vert = 3 # Default
-		show_stt(BTN3_PIN)
+		main_fun(BTN3_PIN)
 
-def scan_wifi(channel):
+def click_b2(channel):
 	global aplist
 	global idxWin
 	global idxLen
 	global start
 	global vert
 	global test
+
 	start = time.time()
-	# result = os.popen("iwlist {0} scan 2>/dev/null | grep '^..*ESSID:\"..*\"$' | sed 's/^.*ESSID:\"\\(..*\\)\".*$/\\1/'".format(iface)).read()
-	# aplist = result.splitlines()
-	if test == 0:
-		test = test + 1
-		aplist = ["one", "two", "three"]
-	elif test == 1:
-		test = test + 1
-		aplist = ["one", "two", "three", "four", "five", "six", "seven"]
-	elif test == 2:
-		test = test + 1
-		aplist = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
-	elif test == 3:
-		test = test + 1
-		aplist = ["one", "two", "three", "four", "five"]
-	elif test == 4:
-		test = 0
-		aplist = ["one", "two"]
 
-	idxLen = len(aplist)
-	if (idxWin + SCREEN_LINES) > idxLen:
-		idxWin = idxLen - SCREEN_LINES
-		if idxWin < 0:
-			idxWin = 0
+	if apIndx >= 0:
+		main_fun(channel)
+	else:
+		# result = os.popen("iwlist {0} scan 2>/dev/null | grep '^..*ESSID:\"..*\"$' | sed 's/^.*ESSID:\"\\(..*\\)\".*$/\\1/'".format(iface)).read()
+		# aplist = result.splitlines()
+		if test == 0:
+			test = test + 1
+			aplist = ["one", "two", "three"]
+		elif test == 1:
+			test = test + 1
+			aplist = ["one", "two", "three", "four", "five", "six", "seven"]
+		elif test == 2:
+			test = test + 1
+			aplist = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
+		elif test == 3:
+			test = test + 1
+			aplist = ["one", "two", "three", "four", "five"]
+		elif test == 4:
+			test = 0
+			aplist = ["one", "two"]
 
-	if vert > idxLen:
-		vert = idxLen
+		idxLen = len(aplist)
+		if (idxWin + SCREEN_LINES) > idxLen:
+			idxWin = idxLen - SCREEN_LINES
+			if idxWin < 0:
+				idxWin = 0
 
-	show_stt(channel)
+		if vert > idxLen:
+			vert = idxLen
+
+		main_fun(channel)
 
 def select_h(channel):
+	global apIndx
 	global start
+	global pwdLen
 	global horz
+	global vert
 	if state == BTN2_PIN:
-		if channel == JS_L_PIN or channel == JS_R_PIN:
-			print "Selected: ", aplist[idxWin + vert - 1] #TEMP!!!
+		if apIndx < 0: #select ssid mode
+			if channel == JS_L_PIN or channel == JS_R_PIN:
+				start = time.time()
+				apIndx = idxWin + vert - 1
+				pwdLen = len(pwdLst)
+				if (pwdLen > 0):
+					horz = pwdLen - 1
+				else:
+					horz = 0
+				print "Selected: ", aplist[apIndx] #TEMP!!!
+		else: #input mode
+			if channel == JS_L_PIN:
+				start = time.time()
+				if horz > 0:
+					horz = horz - 1
+				else:
+					apIndx = -1 #Exit input mode
+					horz = 0
+					vert = 1
+			elif channel == JS_R_PIN:
+				start = time.time()
+				if horz < pwdLen:
+					horz = horz + 1
 	else:
 		if channel == JS_L_PIN:
 			start = time.time()
@@ -157,20 +195,34 @@ def select_v(channel):
 	global start
 	global vert
 	if state == BTN2_PIN:
-		if channel == JS_U_PIN:
-			start = time.time()
-			if vert > 1:
-				vert = vert - 1
-			elif idxWin > 0:
-				idxWin = idxWin - 1
-		elif channel == JS_D_PIN:
-			start = time.time()
-			if vert < 4 and vert < idxLen:
-				vert = vert + 1
-			elif (idxWin + SCREEN_LINES) < idxLen:
-				idxWin = idxWin + 1
-		else:
-			pass
+		if apIndx < 0: #select ssid mode
+			if channel == JS_U_PIN:
+				start = time.time()
+				if vert > 1:
+					vert = vert - 1
+				elif idxWin > 0:
+					idxWin = idxWin - 1
+			elif channel == JS_D_PIN:
+				start = time.time()
+				if vert < 4 and vert < idxLen:
+					vert = vert + 1
+				elif (idxWin + SCREEN_LINES) < idxLen:
+					idxWin = idxWin + 1
+			else:
+				pass
+		else: #input mode
+			if channel == JS_U_PIN:
+				start = time.time()
+				if vert > 0:
+					vert = vert - 1
+				else:
+					vert = 25
+			elif channel == JS_D_PIN:
+				start = time.time()
+				if vert < 25:
+					vert = vert + 1
+				else:
+					vert = 0
 	else:
 		if vert > 3:
 			vert = 3
@@ -237,26 +289,34 @@ def draw_scn(channel):
 				draw.polygon([(x1,y2+6),(x2,y2-1),(x2,y2+4),(x3,y2+4),(x3,y2+8),(x2,y2+8),(x2,y2+13)], outline=255, fill=1)
 
 		elif channel == BTN2_PIN:
-			y2 = y1*vert
-			if (idxWin >= 0) and (idxWin < idxLen):
-				LINE1 = aplist[idxWin]
-			if (idxWin + 1 < idxLen):
-				LINE2 = aplist[idxWin + 1]
-			if (idxWin + 2 < idxLen):
-				LINE3 = aplist[idxWin + 2]
-			if (idxWin + 3 < idxLen):
-				LINE4 = aplist[idxWin + 3]
+			if apIndx < 0: #select ssid mode
+				y2 = y1*vert
+				if (idxWin >= 0) and (idxWin < idxLen):
+					LINE1 = aplist[idxWin]
+				if (idxWin + 1 < idxLen):
+					LINE2 = aplist[idxWin + 1]
+				if (idxWin + 2 < idxLen):
+					LINE3 = aplist[idxWin + 2]
+				if (idxWin + 3 < idxLen):
+					LINE4 = aplist[idxWin + 3]
 
-			draw.polygon([(x1,y2+6),(x2,y2-1),(x2,y2+4),(x3,y2+4),(x3,y2+8),(x2,y2+8),(x2,y2+13)], outline=255, fill=1)
-			draw.rectangle((125,12,127,60), outline=255, fill=0)
+				draw.polygon([(x1,y2+6),(x2,y2-1),(x2,y2+4),(x3,y2+4),(x3,y2+8),(x2,y2+8),(x2,y2+13)], outline=255, fill=1)
+				draw.rectangle((125,12,127,60), outline=255, fill=0)
 
-			thumb_s = 48.0 / idxLen #Step
-			thumb_h = thumb_s * 4 #Because the screen can display 4 rows at a time
-			thumb_0 = idxWin * thumb_s + 12
-			thumb_1 = thumb_0 + thumb_h
-			if thumb_1 > 60:
-				thumb_1 = 60
-			draw.rectangle((125, thumb_0, 127, thumb_1), outline=255, fill=1)
+				thumb_s = 48.0 / idxLen #Step
+				thumb_h = thumb_s * 4 #Because the screen can display 4 rows at a time
+				thumb_0 = idxWin * thumb_s + 12
+				thumb_1 = thumb_0 + thumb_h
+				if thumb_1 > 60:
+					thumb_1 = 60
+				draw.rectangle((125, thumb_0, 127, thumb_1), outline=255, fill=1)
+			else: #input mode
+				LINE1 = "abc"
+				cursorx = 6 * horz
+				draw.text((122, y1)  , choice1[vert], font=font, fill=255)
+				draw.text((122, y1*2), choice2[vert], font=font, fill=255)
+				draw.text((122, y1*3), choice3[vert], font=font, fill=255)
+				draw.rectangle((cursorx,y1+10,cursorx+4,y1+11), outline=255, fill=1)
 
 		elif channel == 995:
 			LINE2 = " Shutting down..."
@@ -267,11 +327,11 @@ def draw_scn(channel):
 		else:
 			pass
 
-		draw.text((x0, y0),    LINE0, font=font, fill=255)
+		draw.text((x0, y0), LINE0, font=font, fill=255)
 		if len(LINE1) > CHAR_WIDTH:
-			draw.text((x0, y1), LINE1[:CHAR_WIDTH], font=font, fill=255)
+			draw.text((x0, y1),   LINE1[:CHAR_WIDTH], font=font, fill=255)
 		else:
-			draw.text((x0, y1), LINE1, font=font, fill=255)
+			draw.text((x0, y1),   LINE1, font=font, fill=255)
 
 		if len(LINE2) > CHAR_WIDTH:
 			draw.text((x0, y1*2), LINE2[:CHAR_WIDTH], font=font, fill=255)
@@ -288,7 +348,7 @@ def draw_scn(channel):
 		else:
 			draw.text((x0, y1*4), LINE4, font=font, fill=255)
 
-def show_stt(channel):
+def main_fun(channel):
 	global serial
 	global device
 	global draw
@@ -305,6 +365,7 @@ def show_stt(channel):
 
 			state = channel
 			start = time.time()
+			apIndx = -1
 			draw_scn(channel)
 		else:
 			pass
@@ -312,6 +373,7 @@ def show_stt(channel):
 		if ((channel > 0) and (channel == state) and (channel != BTN2_PIN)) or ((stamp - start) > SCREEN_SAVER): # A button is pressed or timed out, turn off display
 			GPIO.output(RST_PIN,GPIO.LOW)
 			state = 0
+			apIndx = -1
 		elif (channel > 0) and (channel != state):
 			state = channel
 			start = time.time()
@@ -319,9 +381,9 @@ def show_stt(channel):
 		else: # state > 0 && channel == 0 && not-yet-timeout, refresh screen
 			draw_scn(state)
 
-GPIO.add_event_detect(BTN1_PIN, GPIO.RISING, callback=show_stt, bouncetime=200)
-GPIO.add_event_detect(BTN2_PIN, GPIO.RISING, callback=scan_wifi, bouncetime=200)
-GPIO.add_event_detect(BTN3_PIN, GPIO.RISING, callback=take_act, bouncetime=200)
+GPIO.add_event_detect(BTN1_PIN, GPIO.RISING, callback=main_fun, bouncetime=200)
+GPIO.add_event_detect(BTN2_PIN, GPIO.RISING, callback=click_b2, bouncetime=200)
+GPIO.add_event_detect(BTN3_PIN, GPIO.RISING, callback=click_b3, bouncetime=200)
 GPIO.add_event_detect(JS_L_PIN, GPIO.RISING, callback=select_h, bouncetime=200)
 GPIO.add_event_detect(JS_R_PIN, GPIO.RISING, callback=select_h, bouncetime=200)
 GPIO.add_event_detect(JS_U_PIN, GPIO.RISING, callback=select_v, bouncetime=200)
@@ -331,13 +393,11 @@ iface = subprocess.check_output("iwgetid | awk '{print $1}'", shell = True).rstr
 
 # Main Loop
 try:
-	show_stt(BTN1_PIN)
+	main_fun(BTN1_PIN)
 	while True:
 		stamp = time.time()
-		show_stt(0)
+		main_fun(0)
 		time.sleep(1)
 
 except:
-	print "Stopped", sys.exc_info()[0]
-	raise
-GPIO.cleanup()
+	print "Stopped", sys.exc_i
