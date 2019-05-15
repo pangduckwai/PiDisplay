@@ -74,11 +74,11 @@ vert = 3 #Selection choice: 1 - Top; 2 - Middle; 3 - Bottom
 stamp = time.time() #Current timestamp
 start = time.time() #Start screen saver count down
 iface = ""
-aplist = []
-apIndx = -1
 idxWin = 0
 idxLen = 0
-pwdLst = ["a", "b", "c"] #TEMP!!!
+aplist = []
+apIndx = -1
+pwdLst = []
 pwdLen = 0
 
 test = 0 # For testing!@1!!!!!!!!!!!!!!!!!!!!
@@ -164,7 +164,6 @@ def select_h(channel):
 					horz = pwdLen - 1
 				else:
 					horz = 0
-				print "Selected: ", aplist[apIndx] #TEMP!!!
 		else: #input mode
 			if channel == JS_L_PIN:
 				start = time.time()
@@ -223,6 +222,7 @@ def select_v(channel):
 					vert = vert + 1
 				else:
 					vert = 0
+			pwdLst[horz] = choice2[vert]
 	else:
 		if vert > 3:
 			vert = 3
@@ -239,6 +239,7 @@ def select_v(channel):
 
 def draw_scn(channel):
 	global idxLen
+	global pwdLen
 	with canvas(device) as draw:
 		LINE0 = subprocess.check_output("date +\"%Y-%m-%d %H:%M:%S\"", shell = True)
 		LINE1 = ""
@@ -311,12 +312,20 @@ def draw_scn(channel):
 					thumb_1 = 60
 				draw.rectangle((125, thumb_0, 127, thumb_1), outline=255, fill=1)
 			else: #input mode
-				LINE1 = "abc"
+				if horz >= pwdLen:
+					pwdLst.append(choice2[vert])
+					pwdLen = len(pwdLst)
+
 				cursorx = 6 * horz
+				cursory = y1 * 2
 				draw.text((122, y1)  , choice1[vert], font=font, fill=255)
 				draw.text((122, y1*2), choice2[vert], font=font, fill=255)
 				draw.text((122, y1*3), choice3[vert], font=font, fill=255)
-				draw.rectangle((cursorx,y1+10,cursorx+4,y1+11), outline=255, fill=1)
+				draw.rectangle((cursorx,cursory+10,cursorx+4,cursory+11), outline=255, fill=1)
+
+				LINE1 = "SSID: " + aplist[apIndx]
+				if pwdLen > 0:
+					LINE2 = ''.join(pwdLst)
 
 		elif channel == 995:
 			LINE2 = " Shutting down..."
@@ -400,4 +409,6 @@ try:
 		time.sleep(1)
 
 except:
-	print "Stopped", sys.exc_i
+	print "Stopped", sys.exc_info()[0]
+	raise
+GPIO.cleanup()
