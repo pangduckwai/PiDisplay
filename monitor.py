@@ -47,9 +47,11 @@ x4 = x1+9
 x5 = x2+9
 x6 = x3+9
 
-choice1 = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"]
-choice2 = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
-choice3 = ["0","1","2","3","4","5","6","7","8","9","!","@","#","$","%","^","&","*","(",")",",",".","?",":",";","'"]
+choices = [
+	["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"],
+	["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"],
+	["0","1","2","3","4","5","6","7","8","9","!","@","#","$","%","^","&","*","(",")",",",".","?",":",";","'"]
+]
 
 # init GPIO
 GPIO.setmode(GPIO.BCM) 
@@ -80,13 +82,28 @@ aplist = []
 apIndx = -1
 pwdLst = []
 pwdLen = 0
+chaSel = 1 #possible values: 0, 1, 2
 
 test = 0 # For testing!@1!!!!!!!!!!!!!!!!!!!!
+
+def click_b1(channel):
+	global chaSel
+	if state == BTN1_PIN:
+		main_fun(channel)
+	else:
+		if apIndx < 0:
+			main_fun(BTN1_PIN)
+		else:
+			if chaSel > 0:
+				chaSel = chaSel - 1
+				pwdLst[horz] = choices[chaSel][vert]
+				main_fun(BTN1_PIN)
 
 def click_b3(channel):
 	global start
 	global vert
 	global apIndx
+	global chaSel
 	if state == BTN3_PIN:
 		apIndx = -1
 		if vert == 1:
@@ -103,8 +120,14 @@ def click_b3(channel):
 		else:
 			main_fun(BTN1_PIN)
 	else:
-		vert = 3 # Default
-		main_fun(BTN3_PIN)
+		if apIndx < 0:
+			vert = 3 # Default
+			main_fun(BTN3_PIN)
+		else:
+			if chaSel < 2:
+				chaSel = chaSel + 1
+				pwdLst[horz] = choices[chaSel][vert]
+				main_fun(BTN3_PIN)
 
 def click_b2(channel):
 	global aplist
@@ -222,7 +245,7 @@ def select_v(channel):
 					vert = vert + 1
 				else:
 					vert = 0
-			pwdLst[horz] = choice2[vert]
+			pwdLst[horz] = choices[chaSel][vert]
 	else:
 		if vert > 3:
 			vert = 3
@@ -313,14 +336,14 @@ def draw_scn(channel):
 				draw.rectangle((125, thumb_0, 127, thumb_1), outline=255, fill=1)
 			else: #input mode
 				if horz >= pwdLen:
-					pwdLst.append(choice2[vert])
+					pwdLst.append(choices[chaSel][vert])
 					pwdLen = len(pwdLst)
 
 				cursorx = 6 * horz
 				cursory = y1 * 2
-				draw.text((122, y1)  , choice1[vert], font=font, fill=255)
-				draw.text((122, y1*2), choice2[vert], font=font, fill=255)
-				draw.text((122, y1*3), choice3[vert], font=font, fill=255)
+				draw.text((122, y1)  , choices[0][vert], font=font, fill=255)
+				draw.text((122, y1*2), choices[1][vert], font=font, fill=255)
+				draw.text((122, y1*3), choices[2][vert], font=font, fill=255)
 				draw.rectangle((cursorx,cursory+10,cursorx+4,cursory+11), outline=255, fill=1)
 
 				LINE1 = "SSID: " + aplist[apIndx]
@@ -383,14 +406,14 @@ def main_fun(channel):
 			GPIO.output(RST_PIN,GPIO.LOW)
 			state = 0
 			apIndx = -1
-		elif (channel > 0) and (channel != state):
+		elif (channel > 0) and (channel != state) and (state != BTN2_PIN):
 			state = channel
 			start = time.time()
 			draw_scn(channel)
 		else: # state > 0 && channel == 0 && not-yet-timeout, refresh screen
 			draw_scn(state)
 
-GPIO.add_event_detect(BTN1_PIN, GPIO.RISING, callback=main_fun, bouncetime=200)
+GPIO.add_event_detect(BTN1_PIN, GPIO.RISING, callback=click_b1, bouncetime=200)
 GPIO.add_event_detect(BTN2_PIN, GPIO.RISING, callback=click_b2, bouncetime=200)
 GPIO.add_event_detect(BTN3_PIN, GPIO.RISING, callback=click_b3, bouncetime=200)
 GPIO.add_event_detect(JS_L_PIN, GPIO.RISING, callback=select_h, bouncetime=200)
