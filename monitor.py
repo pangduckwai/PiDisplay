@@ -97,7 +97,7 @@ def click_b1(channel):
 			if chaSel > 0:
 				chaSel = chaSel - 1
 				pwdLst[horz] = choices[chaSel][vert]
-				main_fun(BTN1_PIN)
+				main_fun(BTN2_PIN)
 
 def click_b3(channel):
 	global start
@@ -116,7 +116,7 @@ def click_b3(channel):
 		elif vert == 2:
 			main_fun(997)
 			os.system("sudo usb_drive.sh refresh")
-			start = stamp - SCREEN_SAVER - 10
+			start = stamp - SCREEN_SAVER + 5
 		else:
 			main_fun(BTN1_PIN)
 	else:
@@ -127,7 +127,7 @@ def click_b3(channel):
 			if chaSel < 2:
 				chaSel = chaSel + 1
 				pwdLst[horz] = choices[chaSel][vert]
-				main_fun(BTN3_PIN)
+				main_fun(BTN2_PIN)
 
 def click_b2(channel):
 	global aplist
@@ -140,25 +140,12 @@ def click_b2(channel):
 	start = time.time()
 
 	if apIndx >= 0:
-		main_fun(channel)
+		main_fun(998)
+		print ''.join(pwdLst) #TODO change password for real...
+		start = stamp - SCREEN_SAVER + 5
 	else:
-		# result = os.popen("iwlist {0} scan 2>/dev/null | grep '^..*ESSID:\"..*\"$' | sed 's/^.*ESSID:\"\\(..*\\)\".*$/\\1/'".format(iface)).read()
-		# aplist = result.splitlines()
-		if test == 0:
-			test = test + 1
-			aplist = ["one", "two", "three"]
-		elif test == 1:
-			test = test + 1
-			aplist = ["one", "two", "three", "four", "five", "six", "seven"]
-		elif test == 2:
-			test = test + 1
-			aplist = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
-		elif test == 3:
-			test = test + 1
-			aplist = ["one", "two", "three", "four", "five"]
-		elif test == 4:
-			test = 0
-			aplist = ["one", "two"]
+		result = os.popen("iwlist {0} scan 2>/dev/null | grep '^..*ESSID:\"..*\"$' | sed 's/^.*ESSID:\"\\(..*\\)\".*$/\\1/'".format(iface)).read()
+		aplist = result.splitlines()
 
 		idxLen = len(aplist)
 		if (idxWin + SCREEN_LINES) > idxLen:
@@ -263,6 +250,7 @@ def select_v(channel):
 def draw_scn(channel):
 	global idxLen
 	global pwdLen
+	global apIndx
 	with canvas(device) as draw:
 		LINE0 = subprocess.check_output("date +\"%Y-%m-%d %H:%M:%S\"", shell = True)
 		LINE1 = ""
@@ -273,7 +261,7 @@ def draw_scn(channel):
 			if horz == 1:
 				ssid = subprocess.check_output("iwgetid --raw | awk '{printf \"WiFi:%s\", $0}'", shell = True)
 				freq = subprocess.check_output("iwgetid --freq | awk '{gsub(/Frequency:/,\"\"); printf \" %.1f %s\", $2,$3}'", shell = True)
-				LINE1 = subprocess.check_output("hostname -I | awk '{printf \"IP :%s\", $1}'", shell = True )
+				LINE1 = subprocess.check_output("hostname -I | awk '{printf \"IP: %s\", $1}'", shell = True )
 				LINE2 = subprocess.check_output("df -h /mnt/usb | awk '$NF==\"/mnt/usb\"{printf \"Disk:%s/%s %s\", $3,$2,$5}'", shell = True )
 				LINE3 = ssid + freq
 				LINE4 = subprocess.check_output("cat /sys/class/thermal/thermal_zone0/temp | awk '{printf \"Temp:%.1fC\", $1/1000}'", shell = True )
@@ -356,6 +344,9 @@ def draw_scn(channel):
 			LINE2 = " Rebooting..."
 		elif channel == 997:
 			LINE2 = " Refreshing..."
+		elif channel == 998:
+			LINE1 = "Setting passphrase"
+			LINE2 = "of '" + aplist[apIndx] + "'"
 		else:
 			pass
 
@@ -386,6 +377,7 @@ def main_fun(channel):
 	global draw
 	global state
 	global start
+	global apIndx
 	if state <= 0: # Display is off
 		if channel > 0: # A button is pressed, turn on display
 			# Initialize the display...
@@ -402,11 +394,11 @@ def main_fun(channel):
 		else:
 			pass
 	else: # Display is on
-		if ((channel > 0) and (channel == state) and (channel != BTN2_PIN)) or ((stamp - start) > SCREEN_SAVER): # A button is pressed or timed out, turn off display
+		if ((channel > 0) and (channel == state) and ((channel != BTN2_PIN) or (apIndx < 0))) or ((stamp - start) > SCREEN_SAVER): # A button is pressed or timed out, turn off display
 			GPIO.output(RST_PIN,GPIO.LOW)
 			state = 0
 			apIndx = -1
-		elif (channel > 0) and (channel != state) and (state != BTN2_PIN):
+		elif (channel > 0) and (channel != state) and ((state != BTN2_PIN) or (apIndx < 0) or (channel == 998)):
 			state = channel
 			start = time.time()
 			draw_scn(channel)
