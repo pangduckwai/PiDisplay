@@ -32,7 +32,7 @@ BTN3_PIN = 16
 
 # Some constants
 SCREEN_LINES = 4
-SCREEN_SAVER = 20.0
+SCREEN_SAVER = 999999999.0
 CHAR_WIDTH = 19
 font = ImageFont.load_default()
 width = 128
@@ -141,7 +141,7 @@ def click_b2(channel):
 
 	if apIndx >= 0:
 		main_fun(998)
-		print ''.join(pwdLst) #TODO change password for real...
+		print (''.join(pwdLst)) #TODO change password for real...
 		start = stamp - SCREEN_SAVER + 5
 	else:
 		result = os.popen("iwlist {0} scan 2>/dev/null | grep '^..*ESSID:\"..*\"$' | sed 's/^.*ESSID:\"\\(..*\\)\".*$/\\1/'".format(iface)).read()
@@ -262,7 +262,7 @@ def draw_scn(channel):
 				ssid = subprocess.check_output("iwgetid --raw | awk '{printf \"WiFi:%s\", $0}'", shell = True)
 				freq = subprocess.check_output("iwgetid --freq | awk '{gsub(/Frequency:/,\"\"); printf \" %.1f %s\", $2,$3}'", shell = True)
 				LINE1 = subprocess.check_output("hostname -I | awk '{printf \"IP: %s\", $1}'", shell = True )
-				LINE2 = subprocess.check_output("df -h /mnt/usb | awk '$NF==\"/mnt/usb\"{printf \"Disk:%s/%s %s\", $3,$2,$5}'", shell = True )
+				LINE2 = subprocess.check_output("free -m | awk 'NR==2{printf \"Mem: %s/%sMB %.2f%%\", $3,$2,$3*100/$2 }'", shell = True)
 				LINE3 = ssid + freq
 				LINE4 = subprocess.check_output("cat /sys/class/thermal/thermal_zone0/temp | awk '{printf \"Temp:%.1fC\", $1/1000}'", shell = True )
 				draw.rectangle((0,61,84,63), outline=255, fill=1)
@@ -413,7 +413,7 @@ GPIO.add_event_detect(JS_R_PIN, GPIO.RISING, callback=select_h, bouncetime=200)
 GPIO.add_event_detect(JS_U_PIN, GPIO.RISING, callback=select_v, bouncetime=200)
 GPIO.add_event_detect(JS_D_PIN, GPIO.RISING, callback=select_v, bouncetime=200)
 
-iface = subprocess.check_output("iwgetid | awk '{print $1}'", shell = True).rstrip("\r\n")
+#face = subprocess.check_output("iwgetid | awk 'b{print $1}'", shell = True).rstrip("\r\n")
 
 # Main Loop
 try:
@@ -424,6 +424,6 @@ try:
 		time.sleep(1)
 
 except:
-	print "Stopped", sys.exc_info()[0]
+	print ("Stopped", sys.exc_info())[0]
 	raise
 GPIO.cleanup()
