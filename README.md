@@ -16,6 +16,10 @@ joystick on one side, and 3 buttons on the other:
 The display has some jumpers at the back to be soldered to enable/disable the interfaces it uses.
 It is a no-brainer to use the default 4-wire SPI which require no soldering at all.
 
+##Raspberry Pi OS Version
+I got some problems with newer versions of raspbian with this screen probably because of the kernel version packages not compatible with the ones this screen needs to make a proper connetion so I'm using this one, it's the last version of the 4.9:
+https://downloads.raspberrypi.org/raspbian/images/raspbian-2019-04-09/
+
 ## Setup
 I decided to use Python to control my display. There are other options from the manufacturer but I
 haven't explore them.
@@ -24,25 +28,17 @@ _**Note: The following steps are deduced from the documents provided by the manu
 in the exact order listed below, but I'm not sure if that is absolutely necessary...**_
 
 ### Prepare raspbian
+Install the following packages:
 * `sudo apt-get update`
-* `sudo apt-get install python-dev`
-
-### Install RPi.GPIO
-* Download RPi.GPIO from [https://pypi.python.org/pypi/RPi.GPIO](https://pypi.python.org/pypi/RPi.GPIO) to somewhere.
-* Extract the content (`tar xvfz RPi.GPIO-x.y.z.tar.gz`)
-* `cd RPi.GPIO-x.y.z`
-* `sudo python setup.py install`
-
-### Install spidev
-* Download spidev from [https://pypi.python.org/pypi/spidev](https://pypi.python.org/pypi/spidev) to somewhere.
-* Extract the content (`tar xvfz spidev-x.y.tar.gz`)
-* `sudo apt-get install python-smbus`
-* `sudo apt-get install python-serial`
-* `cd spidev-x.y`
-* `sudo python setup.py install`
-
-### Install Python Imaging
-* `sudo apt-get install python-imaging`
+* `sudo apt-get install python3-dev python3-pip libffi-dev libssl-dev`
+* `sudo pip3 install --upgrade pip`
+* `sudo apt-get purge python3-pip`
+* `sudo pip3 install --upgrade luma.oled`
+* `sudo pip3 install smbus`
+* `sudo apt-get install python3-numpy`
+* `sudo apt-get install libopenjp2-7`
+* `sudo apt install libtiff5`
+* `sudo apt-get install ifstat`
 
 ### Enable the SPI interface
 * `sudo raspi-config`
@@ -57,24 +53,11 @@ Not sure if this is necessary, but well what the hack...
 * Go to 'P5 I2C'
 * Choose 'Yes'
 
-### Install the luma.oled driver
-Well I'm not too sure about what is the point to install python-pip then remove it......
-* `sudo apt-get install python-pip libfreetype6-dev libjpeg-dev`
-* `sudo -H pip install --upgrade pip`
-* `sudo apt-get purge python-pip`
-* `sudo -H pip install --upgrade luma.oled`
+## Fork
+I rearanged the position of the Information lines.
+The first page is harware only and instead of displaying the Ip I added a SD card space left
+The next page is all network, the ip + ssid and network transfer speeds
 
-### Install `ifstat` for displaying network statistic
-* `sudo apt-get install ifstat`
-
-## Test
-That's it, the display is ready to use.
-
-### Sample python app
-* Download the sample apps from [https://www.waveshare.com/wiki/File:1.3inch-OLED-HAT-Code.7z](https://www.waveshare.com/wiki/File:1.3inch-OLED-HAT-Code.7z) to somewhere.
-* Extract the content somehow, I'm too lazy to find out how to handle 7z on Linux... :stuck_out_tongue_closed_eyes:
-* `cd` to the subfolder containing the Python samples.
-* `sudo python demo.py`
 
 ## Next step
 The Python code in this repo (`monitor.py`) display system information of the Pi:
@@ -90,6 +73,6 @@ The latest version utilize GPIO input detection instead of busy wait, which is m
 
 ### Enable the display at startup
 * `sudo vi /etc/rc.local`
-  * Add the following line at the end of the file, assuming `monitor.py` is in /home/pi/:
+  * Add the following line JUST ABOVE exit 0, assuming `monitor.py` is in /home/pi/:
   * `python /home/pi/monitor.py &`
   * _**IMPORTANT**_ Don't forget the `&` character at the end!
