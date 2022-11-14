@@ -16,6 +16,10 @@ joystick on one side, and 3 buttons on the other:
 The display has some jumpers at the back to be soldered to enable/disable the interfaces it uses.
 It is a no-brainer to use the default 4-wire SPI which require no soldering at all.
 
+##Raspberry Pi OS Version
+I got some problems with newer versions of raspbian with this screen probably because of the kernel version packages not compatible with the ones this screen needs to make a proper connetion so I'm using this one, it's the last version of the 4.9:
+https://downloads.raspberrypi.org/raspbian/images/raspbian-2019-04-09/
+
 ## Setup
 I decided to use Python to control my display. There are other options from the manufacturer but I
 haven't explore them.
